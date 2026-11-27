@@ -52,7 +52,9 @@ namespace NWQSim
 
             // always be 0 since 1-MPI maps to 1-GPU
             i_proc = 0;
+#ifndef DISABLE_GPU_AFFINITY
             hipSafeCall(hipSetDevice(i_proc));
+#endif
 
             // CPU side initialization
             SAFE_ALOC_HOST_HIP(dm_real_cpu, dm_size);

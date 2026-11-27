@@ -56,7 +56,9 @@ namespace NWQSim
 
             // always be 0 since 1-MPI maps to 1-GPU
             i_proc = 0;
+#ifndef DISABLE_GPU_AFFINITY
             cudaSafeCall(cudaSetDevice(i_proc));
+#endif
 
             // CPU side initialization
             SAFE_ALOC_HOST_CUDA(dm_real_cpu, dm_size);

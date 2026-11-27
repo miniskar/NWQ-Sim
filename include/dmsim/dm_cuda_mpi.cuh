@@ -66,7 +66,9 @@ namespace NWQSim
             n_gpus = nvshmem_n_pes();
             i_proc = nvshmem_my_pe();
             // always be 0 since 1-MPI maps to 1-GPU
+#ifndef DISABLE_GPU_AFFINITY
             cudaSafeCall(cudaSetDevice(0));
+#endif
 
             gpu_scale = floor(log((double)n_gpus + 0.5) / log(2.0));
             lg2_m_gpu = 2 * n_qubits - gpu_scale;

@@ -178,7 +178,9 @@ public:
         i_gpu = (IdxType)mpi_rank;
 
         //always be 0 since 1-MPI maps to 1-GPU
+#ifndef DISABLE_GPU_AFFINITY
         hipSafeCall(hipSetDevice(0));
+#endif
         gpu_scale = floor(log((double)n_gpus+0.5)/log(2.0));
         lg2_m_gpu = n_qubits-gpu_scale;
         m_gpu = ((IdxType)1<<(lg2_m_gpu));
@@ -880,7 +882,9 @@ public:
     }
     void sim()
     {
+#ifndef DISABLE_GPU_AFFINITY
         hipSafeCall(hipSetDevice(0));
+#endif
 #ifdef PRINT_KERNEL_TRACE
         double* sim_times;
         double sim_time;

@@ -33,6 +33,17 @@ if(NWQSIM_ENABLE_CUDA AND NWQSIM_ENABLE_HIP)
     message(FATAL_ERROR "NWQSIM_ENABLE_CUDA and NWQSIM_ENABLE_HIP cannot both be ON. Pick one GPU backend.")
 endif()
 
+# The GPU simulators call cudaSetDevice/hipSetDevice in their constructors.
+# Turn this on when the caller selects the device (e.g. IRIS binds each worker
+# to its own GPU), so the simulators run on the current device instead.
+if(NOT DEFINED NWQSIM_DISABLE_GPU_AFFINITY AND DEFINED ENV{NWQSIM_DISABLE_GPU_AFFINITY})
+    set(NWQSIM_DISABLE_GPU_AFFINITY "$ENV{NWQSIM_DISABLE_GPU_AFFINITY}")
+endif()
+nwqsim_option(NWQSIM_DISABLE_GPU_AFFINITY OFF)
+if(NWQSIM_DISABLE_GPU_AFFINITY)
+    add_compile_definitions(DISABLE_GPU_AFFINITY)
+endif()
+
 # Find required packages
 if (NWQSIM_ENABLE_CUDA)
   find_package(CUDAToolkit REQUIRED)

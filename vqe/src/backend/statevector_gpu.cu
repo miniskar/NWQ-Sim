@@ -624,7 +624,9 @@ namespace vqe::backend
       dimension = qubits == 0 ? std::size_t{1} : (std::size_t{1} << qubits);
       half_dimension = qubits < 1 ? std::size_t{0} : (dimension >> 1);
 
+#ifndef DISABLE_GPU_AFFINITY
       check_cuda(cudaSetDevice(0), "cudaSetDevice");
+#endif
       check_cuda(cudaGetDeviceProperties(&device_properties, 0), "cudaGetDeviceProperties init");
       check_cuda(cudaMalloc(&d_real, dimension * sizeof(double)), "cudaMalloc real");
       check_cuda(cudaMalloc(&d_imag, dimension * sizeof(double)), "cudaMalloc imag");
