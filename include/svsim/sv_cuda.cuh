@@ -153,7 +153,7 @@ namespace NWQSim
         {
             dim3 gridDim(1, 1, 1);
             cudaDeviceProp deviceProp;
-            cudaSafeCall(cudaGetDeviceProperties(&deviceProp, 0));
+            cudaSafeCall(cudaGetDeviceProperties(&deviceProp, [] { int d = 0; cudaGetDevice(&d); return d; }()));
             // 8*16 is per warp shared-memory usage for C4 TC, with real and imag
             // unsigned smem_size = THREADS_CTA_CUDA/32*8*16*2*sizeof(ValType);
             unsigned smem_size = 0 * sizeof(ValType);
@@ -162,6 +162,12 @@ namespace NWQSim
                                                                        simulation_kernel_cuda, THREADS_CTA_CUDA, smem_size));
 
             gridDim.x = numBlocksPerSm * deviceProp.multiProcessorCount;
+            // Small states: one thread per amplitude is enough (kernels are grid-stride or
+            // tid < dim), and a small cooperative grid syncs faster and lets several
+            // simulations share the GPU. [exachem fixme.sh]
+            const IdxType need = (dim + THREADS_CTA_CUDA - 1) / THREADS_CTA_CUDA;
+            if (need < (IdxType)gridDim.x)
+                gridDim.x = need < 1 ? 1 : (unsigned)need;
             return gridDim;
         }
         void sim(std::shared_ptr<NWQSim::Circuit> circuit) override
@@ -193,14 +199,14 @@ namespace NWQSim
 
             dim3 gridDim = get_dims();
             void *args[] = {&sv_gpu, &n_gates};
-            cudaSafeCall(cudaDeviceSynchronize());
+            cudaSafeCall(cudaStreamSynchronize(0)); // this thread's stream with --default-stream per-thread
 
             sim_timer.start_timer();
 
             unsigned smem_size = 0 * sizeof(ValType);
             cudaLaunchCooperativeKernel((void *)simulation_kernel_cuda, gridDim,
                                         THREADS_CTA_CUDA, args, smem_size);
-            cudaSafeCall(cudaDeviceSynchronize());
+            cudaSafeCall(cudaStreamSynchronize(0)); // this thread's stream with --default-stream per-thread
 
             sim_timer.stop_timer();
             sim_time = sim_timer.measure();

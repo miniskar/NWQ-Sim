@@ -27,7 +27,9 @@
 
 #define PRINT_PROGRESS_BAR
 
+#ifndef NWQSIM_NO_PURITY_CHECK // per-gate norm check (CPU); diagnostics only 
 #define PURITY_CHECK
+#endif
 
 namespace NWQSim
 {
